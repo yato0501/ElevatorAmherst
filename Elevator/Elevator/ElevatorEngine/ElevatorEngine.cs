@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
+using System.Threading;
 using Elevator.Constants;
 using static Elevator.Constants.Constants;
 
@@ -8,7 +10,7 @@ namespace Elevator.ElevatorEngine
 {
 	public class ElevatorEngine : IElevatorEngine
 	{
-		private IList<int> _floorQueue;
+		private List<int> _floorQueue;
 		
 		private ElevatorState _currentState;
 
@@ -23,6 +25,44 @@ namespace Elevator.ElevatorEngine
 			_currentFloor = 1;
 			_minFloor = 1;
 			_maxFloor = 5;
+
+			Thread thread = new Thread(new ThreadStart(ElevatorSimulator));
+			thread.Start();
+		}
+
+		private void ElevatorSimulator()
+		{
+			while (true)
+			{
+				if (_currentState == ElevatorState.Stopped)
+				{
+					if (_floorQueue.Count > 0)
+					{
+						if (_floorQueue.Contains(_currentFloor))
+						{
+							OpenDoor();
+							CloseDoor();
+						}
+						_currentState = GetDirection();
+					}
+				}
+				else if (_currentState == ElevatorState.Up)
+				{
+					GoUp();
+					if (_floorQueue.Contains(_currentFloor))
+					{
+						_currentState = ElevatorState.Stopped;
+					}
+				}
+				else if (_currentState == ElevatorState.Down)
+				{
+					GoDown();
+					if (_floorQueue.Contains(_currentFloor))
+					{
+						_currentState = ElevatorState.Stopped;
+					}
+				}
+			}
 		}
 
 		public void AddToQueue(int floor)
@@ -34,7 +74,8 @@ namespace Elevator.ElevatorEngine
 		{
 			if (_currentState == ElevatorState.Stopped)
 			{
-				Console.WriteLine("door closing or already closed");
+				Console.WriteLine("door closing or already closed on floor " + _currentFloor);
+				Thread.Sleep(2000);
 			}
 		}
 
@@ -42,41 +83,50 @@ namespace Elevator.ElevatorEngine
 		{
 			if (_currentState == ElevatorState.Stopped)
 			{
-				Console.WriteLine("door opening or already opened");
+				//remove all queue of current floor from list
+				_floorQueue.RemoveAll(x => x == _currentFloor);
+				Console.WriteLine("door opening or already opened on floor " + _currentFloor);
+				Thread.Sleep(2000);
 			}
 		}
 
 		public void GoUp()
 		{
 			_currentState = ElevatorState.Up;
+			
 			if (_currentFloor < _maxFloor)
 			{
 				_currentFloor++;
+				Thread.Sleep(1000);
 			}
+			Console.WriteLine("On Floor " + _currentFloor);
 		}
 
 		public void GoDown()
 		{
 			_currentState = ElevatorState.Down;
+			
 			if (_currentFloor > _minFloor)
 			{
 				_currentFloor--;
+				Thread.Sleep(1000);
 			}
+			Console.WriteLine("On Floor " + _currentFloor);
 		}
 
 		public ElevatorState GetDirection()
 		{
-			if (_currentFloor > _floorQueue[0])
+			if (_floorQueue.Count == 0 || _currentFloor == _floorQueue[0])
+			{
+				return ElevatorState.Stopped;
+			}
+			else if (_currentFloor > _floorQueue[0])
 			{
 				return ElevatorState.Down;
 			}
-			else if (_currentFloor < _floorQueue[0])
-			{
-				return ElevatorState.Up;
-			}
 			else
 			{
-				return ElevatorState.Stopped;
+				return ElevatorState.Up;
 			}
 		}
 	}

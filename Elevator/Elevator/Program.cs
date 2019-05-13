@@ -3,6 +3,7 @@ using Elevator.InsideElevator;
 using Elevator.OutsideElevator;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Elevator
@@ -27,18 +28,37 @@ namespace Elevator
 
 			//Retrieving the instances to test
 			var floors = sp.GetServices<ICallElevator>();
+			var elevatorActions = sp.GetService<IElevatorActions>();
+
+
+			PlayScenario(floors, elevatorActions);
+
+
+		}
+
+		private static void PlayScenario(IEnumerable<ICallElevator> floors, IElevatorActions elevatorActions)
+		{
 			var floor1 = (Floor1)floors.FirstOrDefault(x => ((BaseCallElevator)x).Floor == 1);
 			var floor2 = (Floor2)floors.FirstOrDefault(x => ((BaseCallElevator)x).Floor == 2);
 			var floor3 = (Floor3)floors.FirstOrDefault(x => ((BaseCallElevator)x).Floor == 3);
 			var floor4 = (Floor4)floors.FirstOrDefault(x => ((BaseCallElevator)x).Floor == 4);
 			var floor5 = (Floor5)floors.FirstOrDefault(x => ((BaseCallElevator)x).Floor == 5);
 
-			var elevatorActions = sp.GetService<IElevatorActions>();
-
-			
 
 
-			Console.WriteLine("Hello World!");
+			Console.WriteLine("A Person is on floor 3 calling the elevator");
+			floor3.PushButton();
+
+			Console.WriteLine("Pushes Floor 1");
+			elevatorActions.Buttons.FirstOrDefault(x => ((BaseCallElevator)x).Floor == 1).PushButton();
+
+			Console.WriteLine("A Person is on floor 2 calling the elevator");
+			floor2.PushButton();
+
+			Console.WriteLine("Pushes Floor 5");
+			elevatorActions.Buttons.FirstOrDefault(x => ((BaseCallElevator)x).Floor == 5).PushButton();
+
+			Console.WriteLine("End");
 		}
 	}
 }
